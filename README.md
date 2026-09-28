@@ -53,6 +53,7 @@ This lab was built to practice the core workflow of a SOC Analyst L1: get teleme
 │                                             └──────────────────────┘  │
 │                                                                       │
 └───────────────────────────────────────────────────────────────────────┘
+```
 
 
 ---
@@ -137,13 +138,14 @@ Full write-up: `/docs/08-ir-playbook.md`
 
 ---
 
-## Connect 
+## Connect
 
 Interested in cybersecurity, threat detection, or collaborating on security projects?  
 I'd love to connect and learn from fellow security enthusiasts!
 
-🔗 **LinkedIn:** [Tejaswiny](https://www.linkedin.com/in/tejaswiny-k-06bba5290/)
+🔗 **LinkedIn:** [Tejaswiny](https://www.linkedin.com/in/tejaswiny/)
 
+---
 ## Author
 
 **Tejaswiny** — Final-year B.E. CSE (Cybersecurity), KCG College of Technology, Chennai.
