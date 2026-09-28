@@ -2,8 +2,6 @@
 
 A self-built Security Operations Center lab simulating a multi-stage attack chain — reconnaissance, payload execution, command-and-control, and persistence — with detections engineered in Splunk using Sysmon telemetry, and a response procedure documented against NIST SP 800-61.
 
-> Resume/portfolio project name: **Splunk Incident Response Lab & Threat Triage Sandbox**
-
 ---
 
 ## Project Overview
@@ -56,8 +54,6 @@ This lab was built to practice the core workflow of a SOC Analyst L1: get teleme
 │                                                                       │
 └───────────────────────────────────────────────────────────────────────┘
 
-```
-*(Diagram also available as an image in `/diagrams/architecture.png`)*
 
 ---
 
@@ -140,6 +136,13 @@ Full query set and explanations: see `/docs/`.
 Full write-up: `/docs/08-ir-playbook.md`
 
 ---
+
+## Connect 
+
+Interested in cybersecurity, threat detection, or collaborating on security projects?  
+I'd love to connect and learn from fellow security enthusiasts!
+
+🔗 **LinkedIn:** [Tejaswiny](https://www.linkedin.com/in/tejaswiny-k-06bba5290/)
 
 ## Author
 
