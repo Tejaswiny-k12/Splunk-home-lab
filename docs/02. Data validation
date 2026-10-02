@@ -1,1 +1,69 @@
+# 02. Data Validation
 
+## Overview
+
+Before building any detections or dashboards in Splunk, it is essential to confirm that the expected log source is actually being ingested correctly — and that the volume and breakdown of events look reasonable. This step validates that **Sysmon operational logs** from the Windows victim machine are flowing into Splunk under the correct index and sourcetype, before any detection logic is built on top of them.
+
+Skipping this step is a common mistake: building SPL queries against a data source that isn't actually present (wrong sourcetype name, disabled input, wrong index) leads to false negatives that look like "no malicious activity found" when in reality no data was ever reaching Splunk.
+
+## Objective
+
+- Confirm that Sysmon events are present in the `main` index under the sourcetype `WinEventLog:Microsoft-Windows-Sysmon/Operational`.
+- Get a breakdown of event volume **by `EventCode`**, to understand what kind of activity Sysmon is capturing (process creation, network connections, registry changes, etc.).
+- Use this breakdown as a sanity check before writing detection-specific searches later in the lab.
+
+## Validation Query
+
+Run the following Search Processing Language (SPL) query in Splunk's Search & Reporting app:
+
+```spl
+index=main sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational" earliest=-24h
+| stats count by EventCode
+```
+
+**Query breakdown:**
+
+| Clause | Purpose |
+|---|---|
+| `index=main` | Restricts the search to the index where Sysmon logs were configured to land (as set up in `inputs.conf`). |
+| `sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational"` | Filters specifically for Sysmon's operational log channel, excluding other Windows Event Log sources (Security, System, Application). |
+| `earliest=-24h` | Limits the search window to the last 24 hours, so results reflect recent lab activity rather than stale data. |
+| `\| stats count by EventCode` | Aggregates and counts events grouped by Sysmon Event Code, giving a quick summary of which event types are present and how frequent each one is. |
+
+## Interpreting the Results
+
+Each Sysmon `EventCode` corresponds to a specific type of telemetry. Common codes relevant to this lab include:
+
+| EventCode | Meaning |
+|---|---|
+| 1 | Process creation |
+| 3 | Network connection |
+| 7 | Image/DLL loaded |
+| 11 | File created |
+| 13 | Registry value set |
+
+A healthy result set should show multiple event codes with non-zero counts, confirming that Sysmon is actively logging diverse system activity and that Splunk is successfully indexing it.
+
+### Event Count by EventCode
+
+![Sysmon event count by EventCode](images/data-validation-eventcode-count.png)
+
+*Results of the `stats count by EventCode` query, confirming that Sysmon events are being ingested into Splunk and showing the relative volume of each event type over the last 24 hours.*
+
+## Visualizing the Breakdown
+
+To make the distribution of event types easier to read at a glance, the same results can be rendered as a chart directly from the Splunk search results view (**Visualization** tab).
+
+![Visualization of Sysmon EventCode distribution](images/data-validation-visualization.png)
+
+*A chart visualization of the EventCode breakdown, making it easy to spot which event types dominate the log volume.*
+
+## Outcome
+
+This validation confirms:
+
+1. The Splunk-to-Sysmon pipeline configured in `inputs.conf` (see [01. Setup.md](01.%20Setup.md)) is working correctly.
+2. Data is landing in the expected index (`main`) under the expected sourcetype.
+3. There is a healthy spread of event codes, meaning Splunk is capturing the range of telemetry needed for the detections built in later stages (process creation, network connections, registry persistence, etc.).
+
+With ingestion confirmed, the lab can move on to building specific detections — see [03. Network scanning.md](03.%20Network%20scanning.md).
