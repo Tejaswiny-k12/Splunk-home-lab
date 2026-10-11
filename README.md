@@ -143,7 +143,7 @@ Full write-up: `/docs/08-ir-playbook.md`
 Interested in cybersecurity, threat detection, or collaborating on security projects?  
 I'd love to connect and learn from fellow security enthusiasts!
 
-🔗 **LinkedIn:** [Tejaswiny](https://www.linkedin.com/in/tejaswiny/)
+🔗 **LinkedIn:** [Tejaswiny](https://www.linkedin.com/in/tejaswiny-k-06bba5290/)
 
 ---
 ## Author
